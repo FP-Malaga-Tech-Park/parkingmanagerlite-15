@@ -27,6 +27,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.hormigo.david.parkingmanager.bdd.CucumberConfiguration;
 import com.hormigo.david.parkingmanager.core.exceptions.UserExistsException;
+import com.hormigo.david.parkingmanager.draw.domain.Draw;
+import com.hormigo.david.parkingmanager.draw.domain.DrawRepository;
+import com.hormigo.david.parkingmanager.draw.service.DrawServiceImpl;
 import com.hormigo.david.parkingmanager.user.domain.Role;
 import com.hormigo.david.parkingmanager.user.domain.User;
 import com.hormigo.david.parkingmanager.user.domain.UserRepository;
@@ -55,6 +58,12 @@ public class CucumberSteps extends CucumberConfiguration {
     @Spy
     @InjectMocks
     private UserServiceImpl mockedUserService;
+
+    @MockBean
+    private DrawRepository mockedDrawRepository;
+    @Spy
+    @InjectMocks 
+    private DrawServiceImpl mockDrawService;
 
     @Value("${local.server.port}")
     private int port;
@@ -87,6 +96,11 @@ public class CucumberSteps extends CucumberConfiguration {
         when(mockedRepository.findByEmail(email)).thenReturn(null);
         
     }
+    @Dado("el correo {} existe en la base de datos")
+    public void mockUserExists(String email){
+        when(mockedUserService.userExists(email)).thenReturn(true);
+        when(mockedRepository.findByEmail(email)).thenReturn(new User(email,"Angel","Linero","Cano",Role.STUDENT));
+    }
 
 
     @Cuando("relleno el campo {} con {}")
@@ -108,6 +122,9 @@ public class CucumberSteps extends CucumberConfiguration {
             case "crear usuario":
                 buttonId = "user-create-button-submit";
                 break;
+            case "crear sorteo":
+                buttonId = "draw-button-submit";
+                break;
             default:
                 break;
         }
@@ -123,6 +140,14 @@ public class CucumberSteps extends CucumberConfiguration {
     @Entonces("se ha persistido el usuario en la base de datos")
     public void checkUserWasSaved() {
         verify(mockedRepository, times(1)).save(any(User.class));
+    }
+    @Entonces("no se ha persistido el usuario en la base de datos")
+    public void checkUserWasNotSaved() {
+        verify(mockedRepository, never()).save(any(User.class));
+    }
+    @Entonces("se ha persistido el sorteo en la base de datos")
+    public void checkDrawWasSaved() {
+        verify(mockedDrawRepository, times(1)).save(any(Draw.class));
     }
 
 
@@ -169,6 +194,9 @@ public class CucumberSteps extends CucumberConfiguration {
                 break;
             case "segundo apellido":
                 fieldId = "user-create-field-lastname2";
+                break;
+            case "descripcion":
+                fieldId= "draw-label-description";
                 break;
             default:
                 break;
